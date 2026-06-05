@@ -413,7 +413,7 @@ GameObject:
   - component: {fileID: 33016635612514025}
   - component: {fileID: 2268742458237908111}
   m_Layer: 0
-  m_Name: SpinningBladesAxis
+  m_Name: SpinningBladesAxis_SmallFan
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
