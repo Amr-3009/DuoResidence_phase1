@@ -9,26 +9,26 @@ using UnityEngine;
 public class CCTVStreamingServer : MonoBehaviour
 {
     [Header("Port Configuration")]
-    public int serverPort = 8080;
+    [SerializeField] private int serverPort = 8080; // 🚀 RESTORED: Visible in the Inspector
 
-    [Header("Cameras")]
+    [Header("CCTV System Cameras")]
     public Camera camEntrance;
     public Camera camExit;
     public Camera camLanesMaster;
 
-    [Header("Render Textures")]
+    [Header("Render Texture Targets")]
     public RenderTexture rtEntrance;
     public RenderTexture rtExit;
     public RenderTexture rtLanesMaster;
 
-    [Header("Stream Settings")]
-    [Range(10, 100)] public int jpegQuality = 60; // 60% is perfect crisp balance for mobile
+    [Header("Stream Quality")]
+    [Range(10, 100)] [SerializeField] private int jpegQuality = 60; 
 
     private HttpListener _listener;
     private Thread _serverThread;
     private bool _isRunning = false;
 
-    // Thread-safe dictionary to keep track of active stream paths and their viewer counts
+    // Tracking endpoints for all 3 stream paths
     private Dictionary<string, int> _activeStreams = new Dictionary<string, int>()
     {
         { "/entrance", 0 },
@@ -36,35 +36,34 @@ public class CCTVStreamingServer : MonoBehaviour
         { "/lanes", 0 }
     };
 
-    // Cached byte arrays containing the latest encoded frame for each stream
     private Dictionary<string, byte[]> _latestFrames = new Dictionary<string, byte[]>();
     private readonly object _lockObject = new object();
 
     private void Start()
     {
-        // Force all streaming cameras completely off by default to save GPU power
+        // Prevent background rendering overhead when no clients are connected
         if (camEntrance != null) camEntrance.enabled = false;
         if (camExit != null) camExit.enabled = false;
         if (camLanesMaster != null) camLanesMaster.enabled = false;
 
-        // Initialize frame slots
         _latestFrames["/entrance"] = null;
         _latestFrames["/exit"] = null;
         _latestFrames["/lanes"] = null;
 
-        // Start the background network listener thread
         _isRunning = true;
         _serverThread = new Thread(StartHttpServer);
         _serverThread.IsBackground = true;
         _serverThread.Start();
 
-        Debug.Log($"[CCTV Server] Streaming engine initialized on port {serverPort}");
+        Debug.Log($"[CCTV Server] Streaming engine initialized on Inspector Port: {serverPort}");
     }
 
     private void StartHttpServer()
     {
         _listener = new HttpListener();
-        _listener.Prefixes.Add($"http://*:{serverPort}/");
+        
+        // 🚀 FIXED: Binds strictly to your serialized serverPort field
+        _listener.Prefixes.Add($"http://localhost:{serverPort}/");
         
         try
         {
@@ -87,7 +86,6 @@ public class CCTVStreamingServer : MonoBehaviour
         HttpListenerResponse response = context.Response;
         string path = context.Request.Url.AbsolutePath.ToLower();
 
-        // Validate that the requested path is one of our 3 streams
         if (!_activeStreams.ContainsKey(path))
         {
             response.StatusCode = (int)HttpStatusCode.NotFound;
@@ -95,10 +93,8 @@ public class CCTVStreamingServer : MonoBehaviour
             return;
         }
 
-        // Increment viewer count for this stream path
         lock (_lockObject) { _activeStreams[path]++; }
 
-        // Set up the standard industrial MJPEG streaming network headers
         response.ContentType = "multipart/x-mixed-replace; boundary=--frame";
         response.StatusCode = (int)HttpStatusCode.OK;
         Stream outputStream = response.OutputStream;
@@ -116,7 +112,6 @@ public class CCTVStreamingServer : MonoBehaviour
 
                 if (currentFrame != null)
                 {
-                    // Write frame boundaries for the browser engine to decode
                     string header = $"--frame\r\nContent-Type: image/jpeg\r\nContent-Length: {currentFrame.Length}\r\n\r\n";
                     byte[] headerBytes = System.Text.Encoding.ASCII.GetBytes(header);
                     
@@ -128,17 +123,15 @@ public class CCTVStreamingServer : MonoBehaviour
                     outputStream.Flush();
                 }
 
-                // Match a smooth mobile viewing frame rate (approx ~15-20 FPS)
                 Thread.Sleep(60); 
             }
         }
         catch (Exception)
         {
-            // Client closed the app tab or disconnected
+            // Client closed connection safely
         }
         finally
         {
-            // Client left: decrement viewers safely
             lock (_lockObject) 
             { 
                 _activeStreams[path] = Math.Max(0, _activeStreams[path] - 1); 
@@ -147,10 +140,8 @@ public class CCTVStreamingServer : MonoBehaviour
         }
     }
 
-    // LateUpdate handles gathering frames immediately after Unity finishes computing vehicle positions
     private void LateUpdate()
     {
-        // Only render and encode IF someone is actively streaming a specific camera path
         if (_activeStreams["/entrance"] > 0) CaptureFrame("/entrance", camEntrance, rtEntrance);
         if (_activeStreams["/exit"] > 0) CaptureFrame("/exit", camExit, rtExit);
         if (_activeStreams["/lanes"] > 0) CaptureFrame("/lanes", camLanesMaster, rtLanesMaster);
@@ -160,25 +151,21 @@ public class CCTVStreamingServer : MonoBehaviour
     {
         if (cam == null || rt == null) return;
 
-        // 1. Manually force the specific camera to render a single frame into its RenderTexture asset
         cam.Render();
 
-        // 2. Read the active pixels out of the texture
         RenderTexture.active = rt;
         Texture2D tex = new Texture2D(rt.width, rt.height, TextureFormat.RGB24, false);
         tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
         tex.Apply();
 
-        // 3. Encode the pixels straight into a lightweight JPEG byte block
+        // Uses the engine's local jpegQuality setting
         byte[] jpgBytes = ImageConversion.EncodeToJPG(tex, jpegQuality);
 
-        // 4. Update the frame buffer safely for our background server threads to broadcast
         lock (_lockObject)
         {
             _latestFrames[path] = jpgBytes;
         }
 
-        // Clean up unmanaged texture data instantly to keep memory clear
         Destroy(tex);
     }
 

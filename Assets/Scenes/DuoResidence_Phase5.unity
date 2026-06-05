@@ -22235,13 +22235,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CCTVStreamingServer
   serverPort: 8080
-  camEntrance: {fileID: 0}
-  camExit: {fileID: 0}
+  camEntrance: {fileID: 184857028}
+  camExit: {fileID: 1273695684}
   camLanesMaster: {fileID: 1784456122}
-  rtEntrance: {fileID: 0}
-  rtExit: {fileID: 0}
+  rtEntrance: {fileID: 8400000, guid: f0ad40c12085b3d43a93761d560b5b3d, type: 2}
+  rtExit: {fileID: 8400000, guid: f538bbf39d595b2418fac01d0ddc1515, type: 2}
   rtLanesMaster: {fileID: 8400000, guid: 34b718cbf71387d4cb7f1ec906c9d0d2, type: 2}
-  jpegQuality: 60
+  jpegQuality: 100
 --- !u!1 &1266384427
 GameObject:
   m_ObjectHideFlags: 0
