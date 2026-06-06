@@ -9,7 +9,7 @@ using UnityEngine;
 public class CCTVStreamingServer : MonoBehaviour
 {
     [Header("Port Configuration")]
-    [SerializeField] private int serverPort = 8080; // 🚀 RESTORED: Visible in the Inspector
+    [SerializeField] private int serverPort = 8080; 
 
     [Header("CCTV System Cameras")]
     public Camera camEntrance;
@@ -22,7 +22,7 @@ public class CCTVStreamingServer : MonoBehaviour
     public RenderTexture rtLanesMaster;
 
     [Header("Stream Quality")]
-    [Range(10, 100)] [SerializeField] private int jpegQuality = 60; 
+    [Range(10, 100)] [SerializeField] private int jpegQuality = 100; 
 
     private HttpListener _listener;
     private Thread _serverThread;
@@ -37,6 +37,10 @@ public class CCTVStreamingServer : MonoBehaviour
     };
 
     private Dictionary<string, byte[]> _latestFrames = new Dictionary<string, byte[]>();
+    
+    // 🚀 PERFORMANCE FIX: Reusable frame buffer cache to eliminate Garbage Collector spikes
+    private Dictionary<string, Texture2D> _allocatedTextureCache = new Dictionary<string, Texture2D>();
+    
     private readonly object _lockObject = new object();
 
     private void Start()
@@ -55,15 +59,15 @@ public class CCTVStreamingServer : MonoBehaviour
         _serverThread.IsBackground = true;
         _serverThread.Start();
 
-        Debug.Log($"[CCTV Server] Streaming engine initialized on Inspector Port: {serverPort}");
+        Debug.Log($"[CCTV Server] Optimized streaming engine initialized on Inspector Port: {serverPort}");
     }
 
     private void StartHttpServer()
     {
         _listener = new HttpListener();
         
-        // 🚀 FIXED: Binds strictly to your serialized serverPort field
-        _listener.Prefixes.Add($"http://localhost:{serverPort}/");
+        // Configured for clean alignment with standard ngrok routing rules
+        _listener.Prefixes.Add($"http://127.0.0.1:{serverPort}/");
         
         try
         {
@@ -154,32 +158,58 @@ public class CCTVStreamingServer : MonoBehaviour
         cam.Render();
 
         RenderTexture.active = rt;
-        Texture2D tex = new Texture2D(rt.width, rt.height, TextureFormat.RGB24, false);
+
+        // 🚀 OPTIMIZATION: Check cache first to see if a matching texture container already exists
+        if (!_allocatedTextureCache.TryGetValue(path, out Texture2D tex) || tex.width != rt.width || tex.height != rt.height)
+        {
+            if (tex != null) Destroy(tex);
+            
+            // Allocate memory strictly once per active camera path
+            tex = new Texture2D(rt.width, rt.height, TextureFormat.RGB24, false);
+            _allocatedTextureCache[path] = tex;
+        }
+
+        // Read pixels directly into our recycled texture memory reference
         tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
         tex.Apply();
 
-        // Uses the engine's local jpegQuality setting
         byte[] jpgBytes = ImageConversion.EncodeToJPG(tex, jpegQuality);
 
         lock (_lockObject)
         {
             _latestFrames[path] = jpgBytes;
         }
-
-        Destroy(tex);
+        
+        // 🚀 NOTE: Destroy(tex) removed from here! Reusable textures are preserved to protect runtime performance.
     }
 
     private void OnDestroy()
     {
         _isRunning = false;
-        if (_listener != null && _listener.IsListening)
+        
+        // 🚀 SAFE TEARDOWN: Close listener first to break background loop naturally
+        if (_listener != null)
         {
-            _listener.Stop();
-            _listener.Close();
+            try 
+            { 
+                if (_listener.IsListening) _listener.Stop(); 
+                _listener.Close(); 
+            } 
+            catch (Exception) { }
         }
+
+        // Give the background worker thread a clean window to shut down completely
         if (_serverThread != null && _serverThread.IsAlive)
         {
-            _serverThread.Abort();
+            _serverThread.Join(250); 
+            if (_serverThread.IsAlive) _serverThread.Abort();
         }
+
+        // Clear out unmanaged texture memory frames explicitly on termination
+        foreach (Texture2D tex in _allocatedTextureCache.Values)
+        {
+            if (tex != null) Destroy(tex);
+        }
+        _allocatedTextureCache.Clear();
     }
 }
