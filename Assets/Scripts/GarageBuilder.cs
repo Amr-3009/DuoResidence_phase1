@@ -93,7 +93,7 @@ public class GarageBuilder : MonoBehaviour
 
     private void LogFanStatus()
     {
-        Debug.Log($"<color=#00FFCC><b>[HVAC System]:</b></color> Fans are operating at {fanOperatingRatingPercentage}% rating.");
+        // Debug.Log($"<color=#00FFCC><b>[HVAC System]:</b></color> Fans are operating at {fanOperatingRatingPercentage}% rating.");
     }
 
     private void BuildVentilationSystem()

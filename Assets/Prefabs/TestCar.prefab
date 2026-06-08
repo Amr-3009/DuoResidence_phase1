@@ -280,8 +280,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CarAgent
   allExitPoints: []
-  minParkTime: 20
-  maxParkTime: 30
+  minParkTime: 6
+  maxParkTime: 10
   detectionDistance: 4
 --- !u!54 &4385236245927737713
 Rigidbody:

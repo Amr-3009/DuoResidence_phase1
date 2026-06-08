@@ -5014,6 +5014,30 @@ MonoBehaviour:
   wallThickness: 0.5
   wallHeight: 3
   pavementLengthExtension: 0.8
+  buildRoofStructure: 1
+  roofPrefab: {fileID: 0}
+  hangingMountPrefab: {fileID: 0}
+  mountVerticalLength: 0.6
+  roofWidth: 55
+  roofLength: 81
+  yellowLinePrefab: {fileID: 0}
+  yellowLineWidth: 0.15
+  laneLineOffset: 0.2
+  laneSignPrefab: {fileID: 0}
+  signPlacementY: 4
+  signPlacementZ: 40.02
+  signRotationY: 0
+  exitSignPrefab: {fileID: 0}
+  exitSignPlacementY: 4
+  exitSignPlacementZ: -40.02
+  exitSignRotationY: 180
+  bigFanPrefab: {fileID: 0}
+  smallFanPrefab: {fileID: 0}
+  fanOperatingRatingPercentage: 50
+  bigFanMaxRPM: 720
+  smallFanMaxRPM: 1440
+  smallFanCeilingOffset: 1.5
+  smallFansPerLaneCount: 4
 --- !u!1 &652325119
 GameObject:
   m_ObjectHideFlags: 0
@@ -15181,8 +15205,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrafficSpawner
   currentSpawnMode: 0
-  maxActiveCars: 1
-  fixedTotalAmount: 1
+  maxActiveCars: 60
+  fixedTotalAmount: 60
   entryPoints:
   - {fileID: 1074785389}
   - {fileID: 412874145}
