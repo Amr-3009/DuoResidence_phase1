@@ -32278,8 +32278,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrafficSpawner
   currentSpawnMode: 0
-  maxActiveCars: 1
-  fixedTotalAmount: 1
+  maxActiveCars: 10
+  fixedTotalAmount: 10
   entryPoints:
   - {fileID: 1074785389}
   - {fileID: 412874145}
