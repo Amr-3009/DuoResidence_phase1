@@ -8,7 +8,7 @@ public class GarageBuilder : MonoBehaviour
     public GameObject wallPrefab;     
 
     [Header("Garage Settings")]
-    public int slotsPerRow = 15;
+    public int slotsPerRow = 20;
     public float slotWidth = 2.5f;
     public float slotDepth = 5f;
     public float laneRoadWidth = 6f;
