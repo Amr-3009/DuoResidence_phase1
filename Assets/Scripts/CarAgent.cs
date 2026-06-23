@@ -26,9 +26,13 @@ public class CarAgent : MonoBehaviour
     void Start()
     {
         _agent = GetComponent<NavMeshAgent>();
-        
-        // Ensure the agent handles steering and turning naturally while navigating lanes
         _agent.updateRotation = true; 
+
+        // TIMING FIX: Ensure the vehicle has its identity passport from the millisecond it is born
+        if (GetComponent<VehicleIdentity>() == null)
+        {
+            gameObject.AddComponent<VehicleIdentity>();
+        }
         
         StartCoroutine(ParkingRoutine());
     }
@@ -37,7 +41,6 @@ public class CarAgent : MonoBehaviour
     {
         if (_isTrafficBrakingActive && _agent != null && _agent.enabled)
         {
-            // Standard front-bumper radar sweeps directly ahead of the car mesh orientation
             Ray forwardRay = new Ray(transform.position + Vector3.up * 0.5f, transform.forward);
             
             if (Physics.Raycast(forwardRay, out RaycastHit hit, detectionDistance))
@@ -79,10 +82,27 @@ public class CarAgent : MonoBehaviour
         // 2. Request a slot
         _targetSlot = ParkingManager.Instance.GetRandomAvailableSlot();
 
+        // Safely extract the passport that was created in Start()
+        VehicleIdentity passport = GetComponent<VehicleIdentity>();
+
+        // IF THE GARAGE HAS NO AVAILABLE SLOTS:
         if (_targetSlot == null)
         {
+            if (passport != null)
+            {
+                passport.assignedSlotID = "GARAGE FULL";
+            }
+            
+            Debug.LogWarning($"[Traffic Flow] Garage full! Routing Vehicle {passport?.licensePlateID} straight to exit.");
             RouteToNearestExit();
             yield break;
+        }
+
+        // IF A SLOT WAS SUCCESSFULLY ASSIGNED:
+        if (passport != null)
+        {
+            passport.assignedSlotID = _targetSlot.slotID;
+            Debug.Log($"<color=#66FF66><b>[Data Sync]:</b></color> Programmatically linked Slot ID {_targetSlot.slotID} to this vehicle clone.");
         }
 
         // 3. Drive to the slot
@@ -102,7 +122,6 @@ public class CarAgent : MonoBehaviour
             yield return null;
         }
 
-        // THE TRIGGER POINT: Crosses the 2-meter mark to activate the LED debounce timer
         if (_targetSlot != null)
         {
             _targetSlot.StartDebounceTimer();
@@ -125,12 +144,9 @@ public class CarAgent : MonoBehaviour
         
         _agent.enabled = false;
 
-        // FIXED: Performs BOTH position and rotation alignment snaps.
-        // This forces the car to turn and lock perfectly flush with the slot, facing the wall.
         transform.position = new Vector3(_targetPosition.x, transform.position.y, _targetPosition.z);
         transform.rotation = _targetSlot.transform.rotation; 
 
-        // Instant roadblock initialization
         _obstacle = gameObject.AddComponent<NavMeshObstacle>();
         _obstacle.carving = true;
         _obstacle.shape = NavMeshObstacleShape.Box;
@@ -155,19 +171,16 @@ public class CarAgent : MonoBehaviour
 
         ParkingManager.Instance.ReturnSlotToPool(_targetSlot);
 
-        // REVERSE ENGINE CONTROLLER
         Vector3 startPosition = transform.position;
-        Vector3 reverseDirection = transform.forward; // Backwards, away from the slot wall baseline
+        Vector3 reverseDirection = transform.forward; 
         float safeReverseDistance = 4.5f;
 
-        // Active Proximity Radar Scan to safeguard against narrow aisles or rear barriers
         Ray clearanceRay = new Ray(transform.position + Vector3.up * 0.5f, reverseDirection);
         if (Physics.Raycast(clearanceRay, out RaycastHit barrierHit, 6.0f))
         {
             if (!barrierHit.collider.CompareTag("Vehicle"))
             {
                 safeReverseDistance = Mathf.Max(1.0f, barrierHit.distance - 1.2f);
-                Debug.Log($"[CarAgent] Rear Radar Sweep: Custom safe reverse depth set to: {safeReverseDistance:F1}m");
             }
         }
 

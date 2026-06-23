@@ -89,6 +89,30 @@ public class ParkingSlotController : MonoBehaviour
         _debounceCoroutine = null;
     }
 
+    // ======================================================================
+    // DYNAMIC PASSPORT DATA TRACKING (STEP 4 INJECTION)
+    // ======================================================================
+    private void OnTriggerEnter(Collider other)
+    {
+        // 1. Check if the entering object is a valid vehicle based on Tag or Agent existence
+        if (other.CompareTag("Vehicle") || other.transform.root.GetComponentInChildren<CarAgent>() != null)
+        {
+            // 2. Access the top-level parent container of the car asset structure
+            GameObject carRoot = other.transform.root.gameObject;
+            
+            // 3. Extract the passport component injected by the entrance gate
+            VehicleIdentity passport = carRoot.GetComponent<VehicleIdentity>();
+            
+            if (passport != null)
+            {
+                // 4. Stash this slot's unique string address directly inside the car data passport
+                passport.assignedSlotID = this.slotID;
+                
+                Debug.Log($"<color=#66FF66><b>[Slot Allocation Complete]:</b></color> Linked License Plate {passport.licensePlateID} to database Slot ID: {passport.assignedSlotID}");
+            }
+        }
+    }
+
     private void SetLEDColor(bool available)
     {
         // --- SWAP INDUSTRIAL PHYSICAL LED CYLINDER MATERIALS & POINT LIGHT STATES ---
