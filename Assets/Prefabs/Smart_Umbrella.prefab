@@ -334,6 +334,7 @@ GameObject:
   - component: {fileID: 7358796864126850680}
   - component: {fileID: 4048766484086028025}
   - component: {fileID: 7420545849242603061}
+  - component: {fileID: 9045174593926037257}
   m_Layer: 0
   m_Name: Smart_Umbrella
   m_TagString: Untagged
@@ -400,6 +401,23 @@ MonoBehaviour:
   windSpeedLimit: 12
   rainIntensityLimit: 15
   solarOpeningThreshold: 300
+--- !u!114 &9045174593926037257
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2765006920367968429}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad94d9fcec9fa8047ad141662492edef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UmbrellaMQTTPublisher
+  umbrellaEngine: {fileID: 7420545849242603061}
+  windTopic: DuoResidence/Amr/SmartShades/Wind
+  rainTopic: DuoResidence/Amr/SmartShades/Rain
+  solarTopic: DuoResidence/Amr/SmartShades/Solar
+  publishInterval: 0.5
 --- !u!1 &3050138613979444309
 GameObject:
   m_ObjectHideFlags: 0
