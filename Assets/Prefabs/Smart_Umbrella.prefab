@@ -335,6 +335,7 @@ GameObject:
   - component: {fileID: 4048766484086028025}
   - component: {fileID: 7420545849242603061}
   - component: {fileID: 9045174593926037257}
+  - component: {fileID: 7089710058513671994}
   m_Layer: 0
   m_Name: Smart_Umbrella
   m_TagString: Untagged
@@ -359,7 +360,7 @@ Transform:
   - {fileID: 8958697629271379871}
   - {fileID: 9003483541877345961}
   - {fileID: 6366805173257267836}
-  - {fileID: 4712030361100169745}
+  - {fileID: 599055631705461238}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &4048766484086028025
@@ -419,6 +420,20 @@ MonoBehaviour:
   rainTopic: DuoResidence/Amr/SmartShades/Rain
   solarTopic: DuoResidence/Amr/SmartShades/Solar
   publishInterval: 0.5
+--- !u!114 &7089710058513671994
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2765006920367968429}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef7fb454948dd06448772690ad8c7f4c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UmbrellaSimWebSocketListener
+  serverURL: ws://localhost:8080
+  umbrellaEngine: {fileID: 7420545849242603061}
 --- !u!1 &3050138613979444309
 GameObject:
   m_ObjectHideFlags: 0
@@ -2891,7 +2906,7 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
---- !u!1001 &3532020715159126917
+--- !u!1001 &8660555576232304738
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -2948,8 +2963,8 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2d599e315916496469f1bc1558473274, type: 3}
---- !u!4 &4712030361100169745 stripped
+--- !u!4 &599055631705461238 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8097538673657688468, guid: 2d599e315916496469f1bc1558473274, type: 3}
-  m_PrefabInstance: {fileID: 3532020715159126917}
+  m_PrefabInstance: {fileID: 8660555576232304738}
   m_PrefabAsset: {fileID: 0}

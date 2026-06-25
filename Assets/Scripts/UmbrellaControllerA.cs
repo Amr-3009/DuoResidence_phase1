@@ -3,6 +3,7 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 public class UmbrellaControllerA : MonoBehaviour
 {
+    private string _remoteOverrideMode = "RESUME_AUTO";
     // Public getter hooks so external dashboard displays can pull values safely
     public float GetWindLimit() => windSpeedLimit;
     public float GetRainLimit() => rainIntensityLimit;
@@ -32,7 +33,12 @@ public class UmbrellaControllerA : MonoBehaviour
     }
 
     void Update()
+    {  
+        // 2. ONLY run automatic weather logic if no dashboard manual override is active!
+    if (_remoteOverrideMode == "RESUME_AUTO")
     {
+        EvaluateAutomaticWeatherLogic();
+    }
         ProcessSensorLogic(forceUpdate: false);
     }
 
@@ -86,4 +92,47 @@ public class UmbrellaControllerA : MonoBehaviour
             Debug.Log($"<color={colorHeader}><b>[Umbrella Engine A]:</b></color> {logReason}");
         }
     }
+    public void ApplyRemoteOverride(string command)
+{
+    _remoteOverrideMode = command;
+    
+    if (_remoteOverrideMode == "FORCE_OPEN")
+    {
+        GetComponent<Animator>().SetBool("IsOpen", true);
+        Debug.Log("[Engine A] Mode Bypassed: FORCED OPEN via Dashboard.");
+    }
+    else if (_remoteOverrideMode == "FORCE_CLOSE")
+    {
+        GetComponent<Animator>().SetBool("IsOpen", false);
+        Debug.Log("[Engine A] Mode Bypassed: FORCED CLOSED via Dashboard.");
+    }
+    else if (_remoteOverrideMode == "RESUME_AUTO")
+    {
+        Debug.Log("[Engine A] Control returned to automatic logic. Recalculating instantly...");
+        
+        // FIX: Force an immediate weather evaluation right now so it doesn't get stuck!
+        EvaluateAutomaticWeatherLogic(); 
+    }
+}
+/// <summary>
+/// This represents your standard hydrophobic priority rules.
+/// Make sure your actual slider/sensor variables match this function!
+/// </summary>
+private void EvaluateAutomaticWeatherLogic()
+{
+    bool shouldBeOpen = false;
+
+    // Your standard automatic priority checks
+    if (windSpeed >= windSpeedLimit) shouldBeOpen = false; // Safety cutoff
+    else if (rainIntensity >= rainIntensityLimit) shouldBeOpen = true; // Hydrophobic mode
+    else shouldBeOpen = solarIrradiance >= solarOpeningThreshold; // Comfort mode
+
+    // Apply the calculation to the animator
+    GetComponent<Animator>().SetBool("IsOpen", shouldBeOpen);
+}
+
+/// <summary>
+/// Called by your WebSocket listener when a dashboard button is pressed.
+/// </summary>
+
 }
